@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flights-db
+  namespace: gestion-vols
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flights-db
+  template:
+    metadata:
+      labels:
+        app: flights-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: postgres
+            - name: POSTGRES_DB
+              value: flights_db
+          ports:
+            - containerPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flights-db
+  namespace: gestion-vols
+spec:
+  selector:
+    app: flights-db
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flights-service
+  namespace: gestion-vols
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flights-service
+  template:
+    metadata:
+      labels:
+        app: flights-service
+    spec:
+      containers:
+        - name: flights-service
+          image: 522161234005.dkr.ecr.eu-west-3.amazonaws.com/flights-service:latest
+          imagePullPolicy: Always
+          env:
+            - name: DATABASE_URL
+              value: postgresql://postgres:postgres@flights-db:5432/flights_db
+          ports:
+            - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flights-service
+  namespace: gestion-vols
+spec:
+  type: NodePort
+  selector:
+    app: flights-service
+  ports:
+    - port: 8000
+      targetPort: 8000
+      nodePort: 30800
