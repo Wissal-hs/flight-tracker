@@ -40,20 +40,20 @@ jobs:
 
       - name: Build and push flights-service
         run: |
-          docker build -t "$ECR_REGISTRY/flights-service:latest" ./flights-service
+          docker build -t "$ECR_REGISTRY/flights-service:latest" ./flights-service/flights-service
           docker push "$ECR_REGISTRY/flights-service:latest"
 
       - name: Build and push booking-service
         run: |
-          docker build -t "$ECR_REGISTRY/booking-service:latest" ./booking-service
+          docker build -t "$ECR_REGISTRY/booking-service:latest" ./flights-service/booking-service
           docker push "$ECR_REGISTRY/booking-service:latest"
 
       - name: Build and push auth-service
         run: |
-          docker build -t "$ECR_REGISTRY/auth-service:latest" ./auth-service
+          docker build -t "$ECR_REGISTRY/auth-service:latest" ./flights-service/auth-service
           docker push "$ECR_REGISTRY/auth-service:latest"
 
       - name: Build and push notification-service
         run: |
-          docker build -t "$ECR_REGISTRY/notification-service:latest" ./notification-service
+          docker build -t "$ECR_REGISTRY/notification-service:latest" ./flights-service/notification-service
           docker push "$ECR_REGISTRY/notification-service:latest"
