@@ -1,0 +1,59 @@
+name: Build and Deploy Flight Tracker
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-west-3
+  ECR_REGISTRY: 522161234005.dkr.ecr.eu-west-3.amazonaws.com
+  EKS_CLUSTER: gestion-vols-cluster
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::522161234005:role/GitHubActionsFlightTrackerRole
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
+
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region "$AWS_REGION" \
+            | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+
+      - name: Build and push flights-service
+        run: |
+          docker build -t "$ECR_REGISTRY/flights-service:latest" ./flights-service
+          docker push "$ECR_REGISTRY/flights-service:latest"
+
+      - name: Build and push booking-service
+        run: |
+          docker build -t "$ECR_REGISTRY/booking-service:latest" ./booking-service
+          docker push "$ECR_REGISTRY/booking-service:latest"
+
+      - name: Build and push auth-service
+        run: |
+          docker build -t "$ECR_REGISTRY/auth-service:latest" ./auth-service
+          docker push "$ECR_REGISTRY/auth-service:latest"
+
+      - name: Build and push notification-service
+        run: |
+          docker build -t "$ECR_REGISTRY/notification-service:latest" ./notification-service
+          docker push "$ECR_REGISTRY/notification-service:latest"
